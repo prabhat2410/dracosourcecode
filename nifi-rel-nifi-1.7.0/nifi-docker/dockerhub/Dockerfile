@@ -32,7 +32,7 @@ ENV NIFI_PID_DIR=${NIFI_HOME}/run
 ENV NIFI_LOG_DIR=${NIFI_HOME}/logs
 ENV NIFI_LIB_DIR=${NIFI_HOME}/lib
 # Added directory for executing start.sh file
-ADD sh/ ${NIFI_BASE_DIR}/scripts/
+ADD /nifi-rel-nifi-1.7.0/nifi-docker/dockerhub/sh/ ${NIFI_BASE_DIR}/scripts/
 
 
 # Setup NiFi user and create necessary directories
@@ -50,7 +50,7 @@ RUN groupadd -g ${GID} nifi || groupmod -n nifi `getent group ${GID} | cut -d: -
     && apt-get install -y jq xmlstarlet procps
 
 # Added file for adding Draco's functionality
-ADD nifi-ngsi-nar-1.1.0.nar ${NIFI_LIB_DIR}
+ADD nifi-rel-nifi-1.7.0/nifi-docker/dockerhub/nifi-ngsi-nar-1.1.0.nar ${NIFI_LIB_DIR}
 
 USER nifi
 
