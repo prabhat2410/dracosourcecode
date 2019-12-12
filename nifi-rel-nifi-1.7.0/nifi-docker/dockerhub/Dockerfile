@@ -76,6 +76,8 @@ RUN git clone https://github.com/pooja1pathak/fiware-draco.git && \
     sudo cp /opt/fiware-draco/nifi-ngsi-bundle/nifi-ngsi-nar/target/nifi-ngsi-nar-1.1.0.nar /opt/nifi-1.7.0/lib/
     sudo sed -i "s/8080/9090/g" /opt/nifi-1.7.0/conf/nifi.properties
     
+CMD ENTRYPOINT ["./nifi.sh","start"]
+    
 # Setup NiFi user and create necessary directories
 RUN groupadd -g ${GID} nifi || groupmod -n nifi `getent group ${GID} | cut -d: -f1` \
     && useradd --shell /bin/bash -u ${UID} -g ${GID} -m nifi \
@@ -91,23 +93,23 @@ RUN groupadd -g ${GID} nifi || groupmod -n nifi `getent group ${GID} | cut -d: -
     && apt-get install -y jq xmlstarlet procps
 
 # Added file for adding Draco's functionality
-ADD nifi-rel-nifi-1.7.0/nifi-docker/dockerhub/nifi-ngsi-nar-1.1.0.nar ${NIFI_LIB_DIR}
+#ADD nifi-rel-nifi-1.7.0/nifi-docker/dockerhub/nifi-ngsi-nar-1.1.0.nar ${NIFI_LIB_DIR}
 
-USER nifi
+#USER nifi
 
 # Download, validate, and expand Apache NiFi binary.
-RUN curl -fSL ${MIRROR}/${NIFI_BINARY_URL} -o ${NIFI_BASE_DIR}/nifi-${NIFI_VERSION}-bin.tar.gz \
+#RUN curl -fSL ${MIRROR}/${NIFI_BINARY_URL} -o ${NIFI_BASE_DIR}/nifi-${NIFI_VERSION}-bin.tar.gz \
     && echo "$(curl https://archive.apache.org/dist/${NIFI_BINARY_URL}.sha256) *${NIFI_BASE_DIR}/nifi-${NIFI_VERSION}-bin.tar.gz" | sha256sum -c - \
     && tar -xvzf ${NIFI_BASE_DIR}/nifi-${NIFI_VERSION}-bin.tar.gz -C ${NIFI_BASE_DIR} \
     && rm ${NIFI_BASE_DIR}/nifi-${NIFI_VERSION}-bin.tar.gz
 
 # Clear nifi-env.sh in favour of configuring all environment variables in the Dockerfile
-RUN echo "#!/bin/sh\n" > $NIFI_HOME/bin/nifi-env.sh
+#RUN echo "#!/bin/sh\n" > $NIFI_HOME/bin/nifi-env.sh
 
 # Web HTTP(s) & Socket Site-to-Site Ports
 EXPOSE 5050 6060 9090
 
-WORKDIR ${NIFI_HOME}
+#WORKDIR ${NIFI_HOME}
 
 # Apply configuration and start NiFi
 #
