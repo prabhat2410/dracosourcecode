@@ -16,7 +16,9 @@
 # under the License.
 #
 
-FROM openjdk:8-jre
+#FROM openjdk:8-jre
+FROM centos:7.7
+
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 LABEL site="https://nifi.apache.org"
 
@@ -34,7 +36,46 @@ ENV NIFI_LIB_DIR=${NIFI_HOME}/lib
 # Added directory for executing start.sh file
 ADD /nifi-rel-nifi-1.7.0/nifi-docker/dockerhub/sh/ ${NIFI_BASE_DIR}/scripts/
 
+WORKDIR /opt/
+# udpating file for building draco
 
+RUN git clone https://github.com/pooja1pathak/fiware-draco.git && \
+    cd fiware-draco
+    sudo echo "*  hard  nofile  50000" >> /etc/security/limits.conf
+    sudo echo "*  soft  nofile  50000" >> /etc/security/limits.conf
+    sudo sysctl -w net.ipv4.ip_local_port_range="10000 65000"
+    sudo sysctl -w net.ipv4.netfilter.ip_conntrack_tcp_timeout_time_wait="1"
+    sudo yum install java-1.8.0-openjdk
+    sudo yum install java-1.8.0-openjdk-devel
+    sudo echo "JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")" | sudo tee -a /etc/profile
+    source /etc/profile
+    
+    
+#$$$$$$ Java installed$$$$$$$$
+
+#Install Maven
+
+    sudo cd /usr/local/src/
+    sudo wget http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+    sudo tar -xf apache-maven-3.5.4-bin.tar.gz
+    sudo mv apache-maven-3.5.4/ apache-maven/
+    sudo echo "export JAVA_HOME=$JAVA_HOME" >> /etc/profile.d/maven.sh
+    sudo echo "export M2_HOME=/usr/local/src/apache-maven" >> /etc/profile.d/maven.sh
+    sudo echo "export PATH=${M2_HOME}/bin:${PATH}" >> /etc/profile.d/maven.sh
+    sudo chmod +x /etc/profile.d/maven.sh
+    source /etc/profile.d/maven.sh
+    mvn --version
+    
+ #$$$$$$$$$$$$$ maven installed $$$$$$$$$$$$$$$$$$$$$
+    
+    cd /opt/fiware-draco/nifi-ngsi-bundle
+    sudo mvn -T C2.0 clean install -Pinclude-grpc
+    cd /opt
+    sudo curl -kOL https://archive.apache.org/dist/nifi/1.7.0/nifi-1.7.0-bin.tar.gz
+    sudo tar -xvzf nifi-1.7.0-bin.tar.gz
+    sudo cp /opt/fiware-draco/nifi-ngsi-bundle/nifi-ngsi-nar/target/nifi-ngsi-nar-1.1.0.nar /opt/nifi-1.7.0/lib/
+    sudo sed -i "s/8080/9090/g" /opt/nifi-1.7.0/conf/nifi.properties
+    
 # Setup NiFi user and create necessary directories
 RUN groupadd -g ${GID} nifi || groupmod -n nifi `getent group ${GID} | cut -d: -f1` \
     && useradd --shell /bin/bash -u ${UID} -g ${GID} -m nifi \
